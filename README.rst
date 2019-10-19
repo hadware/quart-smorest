@@ -22,14 +22,6 @@ flask-smorest
     :target: https://flask-smorest.readthedocs.io/en/latest/license.html
     :alt: License
 
-.. image:: https://img.shields.io/travis/marshmallow-code/flask-smorest/master.svg
-    :target: https://travis-ci.org/marshmallow-code/flask-smorest
-    :alt: Build status
-
-.. image:: https://coveralls.io/repos/github/marshmallow-code/flask-smorest/badge.svg?branch=master
-    :target: https://coveralls.io/github/marshmallow-code/flask-smorest/?branch=master
-    :alt: Code coverage
-
 .. image:: https://readthedocs.org/projects/flask-smorest/badge/
     :target: http://flask-smorest.readthedocs.io/
     :alt: Documentation
@@ -37,9 +29,8 @@ flask-smorest
 'cause everybody wants s'more
 =============================
 
-**flask-smorest** (formerly known as flask-rest-api) is a REST API framework
-built upon `Flask <https://palletsprojects.com/p/flask/>`_ and
-`marshmallow <https://github.com/marshmallow-code/marshmallow>`_.
+**quart-smorest** REST API framework built upon `Quart <https://pgjones.gitlab.io/quart/>`_ and
+`marshmallow <https://github.com/marshmallow-code/marshmallow>`_. It's an adaptation or **flask-smorest** to use Quart primitives and make it work with that very close, yet sometimes different framework. It's currently under development. **Do not try to use it for something useful yet**.
 
 - Serialization, deserialization and validation using marshmallow ``Schema``
 - Explicit validation error messages returned in response
@@ -57,7 +48,7 @@ Install
 
     pip install flask-smorest
 
-flask-smorest supports Python >= 3.5.
+flask-smorest supports Python >= 3.6.
 
 Documentation
 =============
@@ -67,7 +58,7 @@ Full documentation is available at http://flask-smorest.readthedocs.io/.
 Support flask-smorest
 ======================
 
-If you'd like to support the future of the project, please consider
+If you'd like to support the future of the original project, please consider
 contributing to marshmallow's Open Collective:
 
 .. image:: https://opencollective.com/marshmallow/donate/button.png
@@ -78,4 +69,4 @@ contributing to marshmallow's Open Collective:
 License
 =======
 
-MIT licensed. See the `LICENSE <https://github.com/marshmallow-code/flask-smorest/blob/master/LICENSE>`_ file for more details.
+MIT licensed. See the `LICENSE <https://github.com/hadware/quart-smorest/blob/master/LICENSE>`_ file for more details.
