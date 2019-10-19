@@ -4,9 +4,9 @@ import pytest
 
 from marshmallow import Schema, fields, post_load, post_dump
 
-from flask import Flask
+from quart import Quart
 
-from flask_smorest.compat import MARSHMALLOW_VERSION_MAJOR
+from quart_smorest.compat import MARSHMALLOW_VERSION_MAJOR
 
 from .mocks import DatabaseMock
 
@@ -29,7 +29,7 @@ def collection(request):
 
 @pytest.fixture(params=[AppConfig])
 def app(request):
-    _app = Flask('API Test')
+    _app = Quart('API Test')
     _app.config.from_object(request.param)
     return _app
 

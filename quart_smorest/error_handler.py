@@ -1,7 +1,6 @@
 """Exception handler"""
 
-from werkzeug.exceptions import HTTPException
-
+from quart.exceptions import HTTPException
 
 class ErrorHandlerMixin:
     """Extend Api to manage error handling."""
@@ -38,7 +37,7 @@ class ErrorHandlerMixin:
         - `headers` (``dict``): additional headers
         """
         headers = {}
-        payload = {'code': error.code, 'status': error.name}
+        payload = {'code': error.status[0], 'status': error.status[1]}
 
         # Get additional info passed as kwargs when calling abort
         # data may not exist if

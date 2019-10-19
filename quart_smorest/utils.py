@@ -2,8 +2,8 @@
 
 from collections.abc import Mapping
 
-from werkzeug.datastructures import Headers
-from flask import _app_ctx_stack
+from quart.datastructures import Headers
+from quart import _app_ctx_stack
 from apispec.utils import trim_docstring, dedent
 
 
@@ -27,7 +27,7 @@ def get_appcontext():
 
     # http://flask.pocoo.org/docs/latest/extensiondev/#the-extension-code
     ctx = _app_ctx_stack.top
-    if not hasattr(ctx, 'flask_smorest'):
+    if not hasattr(ctx, 'quart_smorest'):
         ctx.flask_smorest = {}
     return ctx.flask_smorest
 

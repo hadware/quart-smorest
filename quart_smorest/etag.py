@@ -5,7 +5,7 @@ from functools import wraps
 import hashlib
 
 from marshmallow import Schema
-from flask import request, current_app, json
+from quart import request, current_app, json
 
 from .exceptions import (
     CheckEtagNotCalledError,

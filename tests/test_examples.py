@@ -5,9 +5,9 @@ from contextlib import contextmanager
 
 import pytest
 
-from flask.views import MethodView
-
-from flask_smorest import Api, Blueprint, abort, Page
+from quart.views import MethodView
+from quart import abort
+from quart_smorest import Api, Blueprint, Page
 
 from .mocks import ItemNotFound
 

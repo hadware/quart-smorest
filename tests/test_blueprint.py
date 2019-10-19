@@ -8,10 +8,10 @@ import pytest
 
 import marshmallow as ma
 
-from flask.views import MethodView
+from quart.views import MethodView
 
-from flask_smorest import Api, Blueprint, Page
-from flask_smorest.fields import Upload
+from quart_smorest import Api, Blueprint, Page
+from quart_smorest.fields import Upload
 
 from .utils import build_ref
 

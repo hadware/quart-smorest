@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import pytest
 
-from flask_smorest import Api
+from quart_smorest import Api
 
 from .conftest import AppConfig
 

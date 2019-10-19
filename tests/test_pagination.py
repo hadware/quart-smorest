@@ -7,10 +7,10 @@ from unittest import mock
 
 import pytest
 
-from flask.views import MethodView
+from quart.views import MethodView
 
-from flask_smorest import Api, Blueprint, Page
-from flask_smorest.pagination import PaginationParameters
+from quart_smorest import Api, Blueprint, Page
+from quart_smorest.pagination import PaginationParameters
 
 
 CUSTOM_PAGINATION_PARAMS = (2, 5, 10)

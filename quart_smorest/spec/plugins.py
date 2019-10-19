@@ -1,4 +1,4 @@
-"""Flask plugin
+"""Quart plugin
 
 Heavily copied from apispec
 """
@@ -6,7 +6,7 @@ Heavily copied from apispec
 from collections.abc import Mapping
 import re
 
-import werkzeug.routing
+import quart.routing
 
 from apispec import BasePlugin
 
@@ -16,16 +16,16 @@ RE_URL = re.compile(r'<(?:[^:<>]+:)?([^<>]+)>')
 
 # From flask-apispec
 DEFAULT_CONVERTER_MAPPING = {
-    werkzeug.routing.UnicodeConverter: ('string', None),
-    werkzeug.routing.IntegerConverter: ('integer', 'int32'),
-    werkzeug.routing.FloatConverter: ('number', 'float'),
-    werkzeug.routing.UUIDConverter: ('string', 'uuid'),
+    quart.routing.StringConverter: ('string', None),
+    quart.routing.IntegerConverter: ('integer', 'int32'),
+    quart.routing.FloatConverter: ('number', 'float'),
+    quart.routing.UUIDConverter: ('string', 'uuid'),
 }
 DEFAULT_TYPE = ('string', None)
 
 
-class FlaskPlugin(BasePlugin):
-    """Plugin to create OpenAPI paths from Flask rules"""
+class QuartPlugin(BasePlugin):
+    """Plugin to create OpenAPI paths from Quart rules"""
 
     def __init__(self):
         super().__init__()
@@ -38,7 +38,7 @@ class FlaskPlugin(BasePlugin):
 
     # From apispec
     @staticmethod
-    def flaskpath2openapi(path):
+    def quartpath2openapi(path):
         """Convert a Flask URL rule to an OpenAPI-compliant path.
 
         :param str path: Flask path template.
@@ -59,7 +59,7 @@ class FlaskPlugin(BasePlugin):
     def rule_to_params(self, rule):
         """Get parameters from flask Rule"""
         params = []
-        for argument in [a for a in rule.arguments if a not in rule.defaults]:
+        for argument in [a for a in rule._converters.keys() if a not in rule.defaults]:
             param = {
                 'in': 'path',
                 'name': argument,
@@ -101,4 +101,4 @@ class FlaskPlugin(BasePlugin):
             else:
                 parameters.append(path_p)
 
-        return self.flaskpath2openapi(rule.rule)
+        return self.quartpath2openapi(rule.rule)

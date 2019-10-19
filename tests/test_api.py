@@ -2,13 +2,13 @@
 
 import pytest
 
-from flask.views import MethodView
-from werkzeug.routing import BaseConverter
+from quart.views import MethodView
+from quart.routing import BaseConverter
 import marshmallow as ma
 import apispec
 
-from flask_smorest import Api, Blueprint
-from flask_smorest.exceptions import OpenAPIVersionNotSpecified
+from quart_smorest import Api, Blueprint
+from quart_smorest.exceptions import OpenAPIVersionNotSpecified
 
 from .utils import get_schemas
 
@@ -32,7 +32,7 @@ class TestApi():
 
         if view_type == 'function':
             @blp.route('/<custom_str:val>')
-            def test_func(val):
+            async def test_func(val):
                 pass
         else:
             @blp.route('/<custom_str:val>')

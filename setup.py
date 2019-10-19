@@ -7,13 +7,12 @@ with open('README.rst', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='flask-smorest',
-    version='0.18.1',
-    description='Flask/Marshmallow-based REST API framework',
+    name='quart-smorest',
+    version='0.1.0',
+    description='Quart/Marshmallow-based REST API framework',
     long_description=long_description,
-    url='https://github.com/marshmallow-code/flask-smorest',
-    author='Jérôme Lafréchoux',
-    author_email='jlafrechoux@nobatek.com',
+    url='https://github.com/hadware/flask-smorest',
+    author='Hadrien Titeux',
     license='MIT',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -21,7 +20,7 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Internet :: WWW/HTTP',
         'Environment :: Web Environment',
-        'Framework :: Flask',
+        'Framework :: Quart',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -31,7 +30,7 @@ setup(
         'REST',
         'openapi',
         'swagger',
-        'flask',
+        'quart',
         'marshmallow',
         'apispec'
         'webargs',
@@ -43,8 +42,7 @@ setup(
     },
     python_requires='>=3.5',
     install_requires=[
-        'werkzeug>=0.15',
-        'flask>=1.1.0',
+        'quart>=0.6.5',
         'marshmallow>=2.15.2',
         'webargs>=1.5.2',
         'apispec>=3.0.0',

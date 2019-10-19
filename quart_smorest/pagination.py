@@ -13,16 +13,16 @@ from collections import OrderedDict
 from functools import wraps
 import json
 
-from flask import request, current_app
+from quart import request, current_app
 
 import marshmallow as ma
-from webargs.flaskparser import FlaskParser
+from .argsparser import QuartParser
 
 from .utils import unpack_tuple_response
 from .compat import MARSHMALLOW_VERSION_MAJOR
 
 
-parser = FlaskParser()
+parser = QuartParser()
 
 
 class PaginationParameters:

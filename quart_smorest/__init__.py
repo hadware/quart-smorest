@@ -1,7 +1,5 @@
 """Api extension initialization"""
 
-from webargs.flaskparser import abort  # noqa
-
 from .spec import APISpecMixin
 from .blueprint import Blueprint  # noqa
 from .pagination import Page  # noqa
@@ -55,9 +53,9 @@ class Api(APISpecMixin, ErrorHandlerMixin):
         """
         self._app = app
 
-        # Register flask-smorest in app extensions
+        # Register quart-smorest in app extensions
         app.extensions = getattr(app, 'extensions', {})
-        ext = app.extensions.setdefault('flask-smorest', {})
+        ext = app.extensions.setdefault('quart-smorest', {})
         ext['ext_obj'] = self
 
         # Initialize spec

@@ -2,13 +2,13 @@
 from copy import deepcopy
 from functools import wraps
 
-from webargs.flaskparser import FlaskParser
+from .argsparser import QuartParser
 
 
 class ArgumentsMixin:
     """Extend Blueprint to add arguments parsing feature"""
 
-    ARGUMENTS_PARSER = FlaskParser()
+    ARGUMENTS_PARSER = QuartParser()
 
     def arguments(
             self, schema, *, location='json', content_type=None, required=True,
@@ -63,8 +63,8 @@ class ArgumentsMixin:
         def decorator(func):
 
             @wraps(func)
-            def wrapper(*f_args, **f_kwargs):
-                return func(*f_args, **f_kwargs)
+            async def wrapper(*f_args, **f_kwargs):
+                return await func(*f_args, **f_kwargs)
 
             # Add parameter to parameters list in doc info in function object
             # The deepcopy avoids modifying the wrapped function doc

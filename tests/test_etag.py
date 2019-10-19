@@ -7,16 +7,16 @@ from unittest import mock
 
 import pytest
 
-from flask import jsonify, Response
-from flask.views import MethodView
+from quart import jsonify, Response, abort
+from quart.views import MethodView
 
-from flask_smorest import Api, Blueprint, abort
-from flask_smorest.etag import _get_etag_ctx
-from flask_smorest.exceptions import (
+from quart_smorest import Api, Blueprint
+from quart_smorest.etag import _get_etag_ctx
+from quart_smorest.exceptions import (
     CheckEtagNotCalledError,
     NotModified, PreconditionRequired, PreconditionFailed)
-from flask_smorest.utils import get_appcontext
-from flask_smorest.compat import MARSHMALLOW_VERSION_MAJOR
+from quart_smorest.utils import get_appcontext
+from quart_smorest.compat import MARSHMALLOW_VERSION_MAJOR
 
 from .mocks import ItemNotFound
 

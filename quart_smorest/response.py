@@ -3,8 +3,8 @@
 from copy import deepcopy
 from functools import wraps
 
-from werkzeug.wrappers import BaseResponse
-from flask import jsonify
+from quart.wrappers import Response
+from quart import jsonify
 
 from .utils import (
     deepupdate, get_appcontext,
@@ -68,14 +68,14 @@ class ResponseMixin:
         def decorator(func):
 
             @wraps(func)
-            def wrapper(*args, **kwargs):
+            async def wrapper(*args, **kwargs):
 
                 # Execute decorated function
-                result_raw, status, headers = unpack_tuple_response(
-                    func(*args, **kwargs))
+                fun_response = await func(*args, **kwargs)
+                result_raw, status, headers = unpack_tuple_response(fun_response)
 
                 # If return value is a werkzeug BaseResponse, return it
-                if isinstance(result_raw, BaseResponse):
+                if isinstance(result_raw, Response):
                     set_status_and_headers_in_response(
                         result_raw, status, headers)
                     return result_raw

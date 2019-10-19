@@ -1,7 +1,8 @@
 import pytest
 
-from werkzeug.exceptions import default_exceptions, InternalServerError
-from flask_smorest import Api, abort
+from quart.exceptions import default_exceptions, HTTPStatusException
+from quart_smorest import Api
+from quart import abort
 
 
 class TestErrorHandler:
@@ -35,7 +36,7 @@ class TestErrorHandler:
         response = client.get('/uncaught')
         assert response.status_code == 500
         assert response.json['code'] == 500
-        assert response.json['status'] == InternalServerError().name
+        assert response.json['status'] == HTTPStatusException().name
 
     def test_error_handler_payload(self, app):
 

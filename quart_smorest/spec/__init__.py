@@ -1,13 +1,13 @@
 """API specification using OpenAPI"""
 import json
 
-import flask
-from flask import current_app
+import quart
+from quart import current_app
 import apispec
 from apispec.ext.marshmallow import MarshmallowPlugin
 
-from flask_smorest.exceptions import OpenAPIVersionNotSpecified
-from .plugins import FlaskPlugin
+from ..exceptions import OpenAPIVersionNotSpecified
+from .plugins import QuartPlugin
 from .field_converters import uploadfield2properties
 
 
@@ -32,7 +32,7 @@ class DocBlueprintMixin:
         """
         api_url = self._app.config.get('OPENAPI_URL_PREFIX', None)
         if api_url is not None:
-            blueprint = flask.Blueprint(
+            blueprint = quart.Blueprint(
                 'api-docs',
                 __name__,
                 url_prefix=_add_leading_slash(api_url),
@@ -130,7 +130,7 @@ class DocBlueprintMixin:
 
     def _openapi_json(self):
         """Serve JSON spec file"""
-        # We don't use Flask.jsonify here as it would sort the keys
+        # We don't use Quart.jsonify here as it would sort the keys
         # alphabetically while we want to preserve the order.
         return current_app.response_class(
             json.dumps(self.spec.to_dict(), indent=2),
@@ -138,12 +138,12 @@ class DocBlueprintMixin:
 
     def _openapi_redoc(self):
         """Expose OpenAPI spec with ReDoc"""
-        return flask.render_template(
+        return quart.render_template(
             'redoc.html', title=self._app.name, redoc_url=self._redoc_url)
 
     def _openapi_swagger_ui(self):
         """Expose OpenAPI spec with Swagger UI"""
-        return flask.render_template(
+        return quart.render_template(
             'swagger_ui.html', title=self._app.name,
             swagger_ui_url=self._swagger_ui_url,
             swagger_ui_supported_submit_methods=(
@@ -155,13 +155,13 @@ class APISpecMixin(DocBlueprintMixin):
     """Add APISpec related features to Api class"""
 
     def _init_spec(
-            self, *, flask_plugin=None, marshmallow_plugin=None,
+            self, *, quart_plugin=None, marshmallow_plugin=None,
             extra_plugins=None, openapi_version=None, **options
     ):
         # Plugins
-        self.flask_plugin = flask_plugin or FlaskPlugin()
+        self.quart_plugin = quart_plugin or QuartPlugin()
         self.ma_plugin = marshmallow_plugin or MarshmallowPlugin()
-        plugins = [self.flask_plugin, self.ma_plugin]
+        plugins = [self.quart_plugin, self.ma_plugin]
         plugins.extend(extra_plugins or ())
 
         # APISpec options
@@ -210,7 +210,7 @@ class APISpecMixin(DocBlueprintMixin):
 
         Example: ::
 
-            # Register MongoDB's ObjectId converter in Flask application
+            # Register MongoDB's ObjectId converter in Quart application
             app.url_map.converters['objectid'] = ObjectIdConverter
 
             # Register converter in Api
@@ -233,7 +233,7 @@ class APISpecMixin(DocBlueprintMixin):
             self._register_converter(converter, conv_type, conv_format)
 
     def _register_converter(self, converter, conv_type, conv_format=None):
-        self.flask_plugin.register_converter(converter, conv_type, conv_format)
+        self.quart_plugin.register_converter(converter, conv_type, conv_format)
 
     def register_field(self, field, *args):
         """Register custom Marshmallow field

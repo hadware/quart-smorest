@@ -40,8 +40,8 @@ from collections import OrderedDict
 from functools import wraps
 from copy import deepcopy
 
-from flask import Blueprint as FlaskBlueprint
-from flask.views import MethodViewType
+from quart import Blueprint as QuartBluePrint
+from quart.views import MethodViewType
 
 from .utils import deepupdate, load_info_from_docstring
 from .arguments import ArgumentsMixin
@@ -53,7 +53,7 @@ from .spec import (
 
 
 class Blueprint(
-        FlaskBlueprint,
+        QuartBluePrint,
         ArgumentsMixin, ResponseMixin, PaginationMixin, EtagMixin):
     """Blueprint that registers info in API documentation"""
 
