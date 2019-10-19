@@ -1,14 +1,6 @@
 =============
-flask-smorest 
+quart-smorest 
 =============
-
-.. image:: https://img.shields.io/pypi/v/flask-smorest.svg
-    :target: https://pypi.org/project/flask-smorest/
-    :alt: Latest version
-
-.. image:: https://img.shields.io/pypi/pyversions/flask-smorest.svg
-    :target: https://pypi.org/project/flask-smorest/
-    :alt: Python versions
 
 .. image:: https://img.shields.io/badge/marshmallow-2%20|%203-blue.svg
     :target: https://marshmallow.readthedocs.io/en/latest/upgrading.html
