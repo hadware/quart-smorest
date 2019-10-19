@@ -8,7 +8,8 @@ from quart import abort
 class TestErrorHandler:
 
     @pytest.mark.parametrize('code', default_exceptions)
-    def test_error_handler_on_abort(self, app, code):
+    @pytest.mark.asyncio
+    async def test_error_handler_on_abort(self, app, code):
 
         client = app.test_client()
 
@@ -18,12 +19,13 @@ class TestErrorHandler:
 
         Api(app)
 
-        response = client.get('/abort')
+        response = await client.get('/abort')
         assert response.status_code == code
         assert response.json['code'] == code
         assert response.json['status'] == default_exceptions[code]().name
 
-    def test_error_handler_on_unhandled_error(self, app):
+    @pytest.mark.asyncio
+    async def test_error_handler_on_unhandled_error(self, app):
 
         client = app.test_client()
 
@@ -33,12 +35,13 @@ class TestErrorHandler:
 
         Api(app)
 
-        response = client.get('/uncaught')
+        response = await client.get('/uncaught')
         assert response.status_code == 500
         assert response.json['code'] == 500
         assert response.json['status'] == HTTPStatusException().name
 
-    def test_error_handler_payload(self, app):
+    @pytest.mark.asyncio
+    async def test_error_handler_payload(self, app):
 
         client = app.test_client()
 
@@ -67,15 +70,15 @@ class TestErrorHandler:
 
         Api(app)
 
-        response = client.get('/message')
+        response = await client.get('/message')
         assert response.status_code == 404
         assert response.json['message'] == 'Resource not found'
 
-        response = client.get('/messages')
+        response = await client.get('/messages')
         assert response.status_code == 422
         assert response.json['errors'] == messages
 
-        response = client.get('/errors')
+        response = await client.get('/errors')
         assert response.status_code == 422
         assert response.json['errors'] == errors
 

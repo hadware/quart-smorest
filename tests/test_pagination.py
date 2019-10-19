@@ -123,7 +123,8 @@ class TestPagination():
                 .format(repr(page_params)))
 
     @pytest.mark.parametrize('header_name', ('X-Dummy-Name', None))
-    def test_pagination_custom_header_field_name(self, app, header_name):
+    @pytest.mark.asyncio
+    async def test_pagination_custom_header_field_name(self, app, header_name):
         """Test PAGINATION_HEADER_FIELD_NAME overriding"""
         api = Api(app)
 
@@ -141,7 +142,7 @@ class TestPagination():
 
         api.register_blueprint(blp)
         client = app.test_client()
-        response = client.get('/test/')
+        response = await client.get('/test/')
         assert response.status_code == 200
         assert 'X-Pagination' not in response.headers
         if header_name is not None:
@@ -151,7 +152,8 @@ class TestPagination():
             )
 
     @pytest.mark.parametrize('header_name', ('X-Pagination', None))
-    def test_pagination_item_count_missing(self, app, header_name):
+    @pytest.mark.asyncio
+    async def test_pagination_item_count_missing(self, app, header_name):
         """If item_count was not set, pass and warn"""
         api = Api(app)
 
@@ -172,7 +174,7 @@ class TestPagination():
         client = app.test_client()
 
         with mock.patch.object(app.logger, 'warning') as mock_warning:
-            response = client.get('/test/')
+            response = await client.get('/test/')
             assert response.status_code == 200
             assert 'X-Pagination' not in response.headers
             if header_name is None:
@@ -183,9 +185,10 @@ class TestPagination():
                     ('item_count not set in endpoint test.func',), )
 
     @pytest.mark.parametrize('collection', [1000, ], indirect=True)
-    def test_pagination_parameters(self, app_fixture):
+    @pytest.mark.asyncio
+    async def test_pagination_parameters(self, app_fixture):
         # page = 2, page_size = 5
-        response = app_fixture.client.get(
+        response = await app_fixture.client.get(
             '/test/', query_string={'page': 2, 'page_size': 5})
         assert response.status_code == 200
         data = response.json
@@ -200,7 +203,7 @@ class TestPagination():
         }
         # page = 334, page_size = 3
         # last page is incomplete if total not multiple of page_size
-        response = app_fixture.client.get(
+        response = await app_fixture.client.get(
             '/test/', query_string={'page': 334, 'page_size': 3})
         assert response.status_code == 200
         data = response.json
@@ -213,10 +216,11 @@ class TestPagination():
         }
 
     @pytest.mark.parametrize('collection', [1000, ], indirect=True)
-    def test_pagination_parameters_default_page_page_size(self, app_fixture):
+    @pytest.mark.asyncio
+    async def test_pagination_parameters_default_page_page_size(self, app_fixture):
         # Default: page = 1, page_size = 10
         # Custom: page = 2, page_size = 5
-        response = app_fixture.client.get('/test/')
+        response = await app_fixture.client.get('/test/')
         assert response.status_code == 200
         data = response.json
         headers = response.headers
@@ -239,9 +243,10 @@ class TestPagination():
                 'previous_page': 1, 'next_page': 3,
             }
 
-    def test_pagination_empty_collection(self, app_fixture):
+    @pytest.mark.asyncio
+    async def test_pagination_empty_collection(self, app_fixture):
         # empty collection -> 200 with empty list, partial pagination metadata
-        response = app_fixture.client.get('/test/')
+        response = await app_fixture.client.get('/test/')
         assert response.status_code == 200
         assert json.loads(response.headers['X-Pagination']) == {
             'total': 0, 'total_pages': 0,

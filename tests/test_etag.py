@@ -392,7 +392,8 @@ class TestEtag():
 
         assert etag_1 != etag_2
 
-    def test_etag_response_object(self, app):
+    @pytest.mark.asyncio
+    async def test_etag_response_object(self, app):
         api = Api(app)
         blp = Blueprint('test', __name__, url_prefix='/test')
         client = app.test_client()
@@ -408,21 +409,22 @@ class TestEtag():
 
         api.register_blueprint(blp)
 
-        response = client.get('/test/')
+        response = await client.get('/test/')
         assert response.json == {}
         assert response.get_etag() == (blp._generate_etag('test'), False)
 
-    def test_etag_operations_etag_enabled(self, app_with_etag):
+    @pytest.mark.asyncio
+    async def test_etag_operations_etag_enabled(self, app_with_etag):
 
         client = app_with_etag.test_client()
 
         # GET without ETag: OK
-        response = client.get('/test/')
+        response = await client.get('/test/')
         assert response.status_code == 200
         list_etag = response.headers['ETag']
 
         # GET with correct ETag: Not modified
-        response = client.get(
+        response = await client.get(
             '/test/',
             headers={'If-None-Match': list_etag}
         )
@@ -430,7 +432,7 @@ class TestEtag():
 
         # POST item_1
         item_1_data = {'field': 0}
-        response = client.post(
+        response = await client.post(
             '/test/',
             data=json.dumps(item_1_data),
             content_type='application/json'
@@ -439,19 +441,19 @@ class TestEtag():
         item_1_id = response.json['item_id']
 
         # GET with wrong/outdated ETag: OK
-        response = client.get(
+        response = await client.get(
             '/test/',
             headers={'If-None-Match': list_etag}
         )
         assert response.status_code == 200
 
         # GET by ID without ETag: OK
-        response = client.get('/test/{}'.format(item_1_id))
+        response = await client.get('/test/{}'.format(item_1_id))
         assert response.status_code == 200
         item_etag = response.headers['ETag']
 
         # GET by ID with correct ETag: Not modified
-        response = client.get(
+        response = await client.get(
             '/test/{}'.format(item_1_id),
             headers={'If-None-Match': item_etag}
         )
@@ -459,7 +461,7 @@ class TestEtag():
 
         # PUT without ETag: Precondition required error
         item_1_data['field'] = 1
-        response = client.put(
+        response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
             content_type='application/json'
@@ -467,7 +469,7 @@ class TestEtag():
         assert response.status_code == 428
 
         # PUT with correct ETag: OK
-        response = client.put(
+        response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
             content_type='application/json',
@@ -478,7 +480,7 @@ class TestEtag():
 
         # PUT with wrong/outdated ETag: Precondition failed error
         item_1_data['field'] = 2
-        response = client.put(
+        response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
             content_type='application/json',
@@ -487,41 +489,42 @@ class TestEtag():
         assert response.status_code == 412
 
         # GET by ID with wrong/outdated ETag: OK
-        response = client.get(
+        response = await client.get(
             '/test/{}'.format(item_1_id),
             headers={'If-None-Match': item_etag}
         )
         assert response.status_code == 200
 
         # DELETE without ETag: Precondition required error
-        response = client.delete('/test/{}'.format(item_1_id))
+        response = await client.delete('/test/{}'.format(item_1_id))
         assert response.status_code == 428
 
         # DELETE with wrong/outdated ETag: Precondition failed error
-        response = client.delete(
+        response = await client.delete(
             '/test/{}'.format(item_1_id),
             headers={'If-Match': item_etag}
         )
         assert response.status_code == 412
 
         # DELETE with correct ETag: No Content
-        response = client.delete(
+        response = await client.delete(
             '/test/{}'.format(item_1_id),
             headers={'If-Match': new_item_etag}
         )
         assert response.status_code == 204
 
-    def test_etag_operations_etag_disabled(self, app_with_etag):
+    @pytest.mark.asyncio
+    async def test_etag_operations_etag_disabled(self, app_with_etag):
 
         app_with_etag.config['ETAG_DISABLED'] = True
         client = app_with_etag.test_client()
 
         # GET without ETag: OK
-        response = client.get('/test/')
+        response = await client.get('/test/')
         assert response.status_code == 200
 
         # GET with whatever ETag: OK (dummy ETag ignored)
-        response = client.get(
+        response = await client.get(
             '/test/',
             headers={'If-None-Match': 'dummy_etag'}
         )
@@ -529,7 +532,7 @@ class TestEtag():
 
         # POST item_1
         item_1_data = {'field': 0}
-        response = client.post(
+        response = await client.post(
             '/test/',
             data=json.dumps(item_1_data),
             content_type='application/json'
@@ -538,11 +541,11 @@ class TestEtag():
         item_1_id = response.json['item_id']
 
         # GET by ID: OK
-        response = client.get('/test/{}'.format(item_1_id))
+        response = await client.get('/test/{}'.format(item_1_id))
         assert response.status_code == 200
 
         # GET by ID with whatever ETag: OK (dummy ETag ignored)
-        response = client.get(
+        response = await client.get(
             '/test/{}'.format(item_1_id),
             headers={'If-None-Match': 'dummy_etag'}
         )
@@ -550,7 +553,7 @@ class TestEtag():
 
         # PUT without ETag: OK
         item_1_data['field'] = 1
-        response = client.put(
+        response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
             content_type='application/json'
@@ -559,7 +562,7 @@ class TestEtag():
 
         # PUT with whatever ETag: OK (dummy ETag ignored)
         item_1_data['field'] = 2
-        response = client.put(
+        response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
             content_type='application/json'
@@ -568,7 +571,7 @@ class TestEtag():
 
         # POST item_2
         item_2_data = {'field': 9}
-        response = client.post(
+        response = await client.post(
             '/test/',
             data=json.dumps(item_2_data),
             content_type='application/json'
@@ -577,11 +580,11 @@ class TestEtag():
         item_2_id = response.json['item_id']
 
         # DELETE without ETag: No Content (dummy ETag ignored)
-        response = client.delete('/test/{}'.format(item_1_id))
+        response = await client.delete('/test/{}'.format(item_1_id))
         assert response.status_code == 204
 
         # DELETE with whatever ETag: No Content (dummy ETag ignored)
-        response = client.delete(
+        response = await client.delete(
             '/test/{}'.format(item_2_id),
             headers={'If-Match': 'dummy_etag'}
         )

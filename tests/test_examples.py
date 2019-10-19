@@ -225,7 +225,8 @@ def blueprint_fixture(request, collection, schemas):
 
 class TestFullExample():
 
-    def test_examples(self, app, blueprint_fixture, schemas):
+    @pytest.mark.asyncio
+    async def test_examples(self, app, blueprint_fixture, schemas):
 
         blueprint, bp_schema = blueprint_fixture
 
@@ -250,7 +251,7 @@ class TestFullExample():
 
         # GET collection without ETag: OK
         with assert_counters(0, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.get('/test/')
+            response = await client.get('/test/')
             assert response.status_code == 200
             list_etag = response.headers['ETag']
             assert len(response.json) == 0
@@ -259,7 +260,7 @@ class TestFullExample():
 
         # GET collection with correct ETag: Not modified
         with assert_counters(0, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.get(
+            response = await client.get(
                 '/test/',
                 headers={'If-None-Match': list_etag}
             )
@@ -268,7 +269,7 @@ class TestFullExample():
         # POST item_1
         item_1_data = {'field': 0}
         with assert_counters(1, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.post(
+            response = await client.post(
                 '/test/',
                 data=json.dumps(item_1_data),
                 content_type='application/json'
@@ -278,7 +279,7 @@ class TestFullExample():
 
         # GET collection with wrong/outdated ETag: OK
         with assert_counters(0, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.get(
+            response = await client.get(
                 '/test/',
                 headers={'If-None-Match': list_etag}
             )
@@ -292,14 +293,14 @@ class TestFullExample():
 
         # GET by ID without ETag: OK
         with assert_counters(0, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.get('/test/{}'.format(item_1_id))
+            response = await client.get('/test/{}'.format(item_1_id))
         assert response.status_code == 200
         item_etag = response.headers['ETag']
 
         # GET by ID with correct ETag: Not modified
         with assert_counters(0, 0 if bp_schema == 'No schema' else 1,
                              0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.get(
+            response = await client.get(
                 '/test/{}'.format(item_1_id),
                 headers={'If-None-Match': item_etag}
             )
@@ -308,7 +309,7 @@ class TestFullExample():
         # PUT without ETag: Precondition required error
         item_1_data['field'] = 1
         with assert_counters(0, 0, 0, 0):
-            response = client.put(
+            response = await client.put(
                 '/test/{}'.format(item_1_id),
                 data=json.dumps(item_1_data),
                 content_type='application/json'
@@ -318,7 +319,7 @@ class TestFullExample():
         # PUT with correct ETag: OK
         with assert_counters(1, 2 if bp_schema == 'Schema' else 1,
                              0, 2 if bp_schema == 'ETag schema' else 0):
-            response = client.put(
+            response = await client.put(
                 '/test/{}'.format(item_1_id),
                 data=json.dumps(item_1_data),
                 content_type='application/json',
@@ -331,7 +332,7 @@ class TestFullExample():
         item_1_data['field'] = 2
         with assert_counters(1, 1 if bp_schema == 'Schema' else 0,
                              0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.put(
+            response = await client.put(
                 '/test/{}'.format(item_1_id),
                 data=json.dumps(item_1_data),
                 content_type='application/json',
@@ -341,7 +342,7 @@ class TestFullExample():
 
         # GET by ID with wrong/outdated ETag: OK
         with assert_counters(0, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.get(
+            response = await client.get(
                 '/test/{}'.format(item_1_id),
                 headers={'If-None-Match': item_etag}
             )
@@ -349,7 +350,7 @@ class TestFullExample():
 
         # GET collection with pagination set to 1 element per page
         with assert_counters(0, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.get(
+            response = await client.get(
                 '/test/',
                 headers={'If-None-Match': list_etag},
                 query_string={'page': 1, 'page_size': 1}
@@ -365,7 +366,7 @@ class TestFullExample():
         # POST item_2
         item_2_data = {'field': 1}
         with assert_counters(1, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.post(
+            response = await client.post(
                 '/test/',
                 data=json.dumps(item_2_data),
                 content_type='application/json'
@@ -376,7 +377,7 @@ class TestFullExample():
         # Content is the same (item_1) but pagination metadata has changed
         # so we don't get a 304 and the data is returned again
         with assert_counters(0, 1, 0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.get(
+            response = await client.get(
                 '/test/',
                 headers={'If-None-Match': list_etag},
                 query_string={'page': 1, 'page_size': 1}
@@ -391,13 +392,13 @@ class TestFullExample():
 
         # DELETE without ETag: Precondition required error
         with assert_counters(0, 0, 0, 0):
-            response = client.delete('/test/{}'.format(item_1_id))
+            response = await client.delete('/test/{}'.format(item_1_id))
         assert response.status_code == 428
 
         # DELETE with wrong/outdated ETag: Precondition failed error
         with assert_counters(0, 1 if bp_schema == 'Schema' else 0,
                              0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.delete(
+            response = await client.delete(
                 '/test/{}'.format(item_1_id),
                 headers={'If-Match': item_etag}
             )
@@ -406,7 +407,7 @@ class TestFullExample():
         # DELETE with correct ETag: No Content
         with assert_counters(0, 1 if bp_schema == 'Schema' else 0,
                              0, 1 if bp_schema == 'ETag schema' else 0):
-            response = client.delete(
+            response = await client.delete(
                 '/test/{}'.format(item_1_id),
                 headers={'If-Match': new_item_etag}
             )

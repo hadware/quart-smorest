@@ -609,7 +609,8 @@ class TestBlueprint():
         assert parameters[3]['name'] == 'arg2'
         assert parameters[3]['in'] == 'query'
 
-    def test_blueprint_doc_function(self, app):
+    @pytest.mark.asyncio
+    async def test_blueprint_doc_function(self, app):
         api = Api(app)
         blp = Blueprint('test', __name__, url_prefix='/test')
         client = app.test_client()
@@ -626,7 +627,7 @@ class TestBlueprint():
             assert path[method]['summary'] == 'Dummy func'
             assert path[method]['description'] == 'Do dummy stuff'
 
-        response = client.put('/test/')
+        response = await client.put('/test/')
         assert response.status_code == 200
         assert response.json == {'Value': 'OK'}
 
@@ -844,7 +845,8 @@ class TestBlueprint():
         assert 'get' in paths['/test/route_1']
         assert 'get' in paths['/test/route_2']
 
-    def test_blueprint_response_tuple(self, app):
+    @pytest.mark.asyncio
+    async def test_blueprint_response_tuple(self, app):
         api = Api(app)
         blp = Blueprint('test', __name__, url_prefix='/test')
         client = app.test_client()
@@ -893,38 +895,39 @@ class TestBlueprint():
 
         api.register_blueprint(blp)
 
-        response = client.get('/test/response')
+        response = await client.get('/test/response')
         assert response.status_code == 200
         assert response.json == {}
-        response = client.get('/test/response_code_int')
+        response = await client.get('/test/response_code_int')
         assert response.status_code == 201
         assert response.status == '201 CREATED'
         assert response.json == {}
-        response = client.get('/test/response_code_str')
+        response = await client.get('/test/response_code_str')
         assert response.status_code == 201
         assert response.status == '201 CREATED'
         assert response.json == {}
-        response = client.get('/test/response_headers')
+        response = await client.get('/test/response_headers')
         assert response.status_code == 200
         assert response.json == {}
         assert response.headers['X-header'] == 'test'
-        response = client.get('/test/response_code_int_headers')
+        response = await client.get('/test/response_code_int_headers')
         assert response.status_code == 201
         assert response.status == '201 CREATED'
         assert response.json == {}
         assert response.headers['X-header'] == 'test'
-        response = client.get('/test/response_code_str_headers')
+        response = await client.get('/test/response_code_str_headers')
         assert response.status_code == 201
         assert response.status == '201 CREATED'
         assert response.json == {}
         assert response.headers['X-header'] == 'test'
-        response = client.get('/test/response_wrong_tuple')
+        response = await client.get('/test/response_wrong_tuple')
         assert response.status_code == 500
-        response = client.get('/test/response_tuple_subclass')
+        response = await client.get('/test/response_tuple_subclass')
         assert response.status_code == 200
         assert response.json == [1, 2]
 
-    def test_blueprint_pagination_response_tuple(self, app):
+    @pytest.mark.asyncio
+    async def test_blueprint_pagination_response_tuple(self, app):
         api = Api(app)
         blp = Blueprint('test', __name__, url_prefix='/test')
         client = app.test_client()
@@ -969,27 +972,28 @@ class TestBlueprint():
 
         api.register_blueprint(blp)
 
-        response = client.get('/test/response')
+        response = await client.get('/test/response')
         assert response.status_code == 200
         assert response.json == [1, 2]
-        response = client.get('/test/response_code')
+        response = await client.get('/test/response_code')
         assert response.status_code == 201
         assert response.json == [1, 2]
-        response = client.get('/test/response_headers')
+        response = await client.get('/test/response_headers')
         assert response.status_code == 200
         assert response.json == [1, 2]
         assert response.headers['X-header'] == 'test'
-        response = client.get('/test/response_code_headers')
+        response = await client.get('/test/response_code_headers')
         assert response.status_code == 201
         assert response.json == [1, 2]
         assert response.headers['X-header'] == 'test'
-        response = client.get('/test/response_wrong_tuple')
+        response = await client.get('/test/response_wrong_tuple')
         assert response.status_code == 500
-        response = client.get('/test/response_tuple_subclass')
+        response = await client.get('/test/response_tuple_subclass')
         assert response.status_code == 200
         assert response.json == [1, 2]
 
-    def test_blueprint_response_response_object(self, app, schemas):
+    @pytest.mark.asyncio
+    async def test_blueprint_response_response_object(self, app, schemas):
         api = Api(app)
         blp = Blueprint('test', __name__, url_prefix='/test')
         client = app.test_client()
@@ -1002,7 +1006,7 @@ class TestBlueprint():
 
         api.register_blueprint(blp)
 
-        response = client.get('/test/response')
+        response = await client.get('/test/response')
         assert response.status_code == 201
         assert response.status == '201 CREATED'
         assert response.json == {}

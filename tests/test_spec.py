@@ -37,7 +37,8 @@ class TestAPISpecServeDocs():
     @pytest.mark.parametrize('swagger_ui_path', (None, 'swagger-ui'))
     @pytest.mark.parametrize('swagger_ui_version', (None, '3.0.2'))
     @pytest.mark.parametrize('swagger_ui_url', (None, 'https://my-swagger/'))
-    def test_apipec_serve_spec(
+    @pytest.mark.asyncio
+    async def test_apipec_serve_spec(
             self, app, prefix, json_path, redoc_path,
             swagger_ui_path, swagger_ui_url, swagger_ui_version):
         """Test default values and leading/trailing slashes issues"""
@@ -59,9 +60,9 @@ class TestAPISpecServeDocs():
         app.config.from_object(NewAppConfig)
         Api(app)
         client = app.test_client()
-        response_json_docs = client.get('/docs_url_prefix/openapi.json')
-        response_redoc = client.get('/docs_url_prefix/redoc')
-        response_swagger_ui = client.get('/docs_url_prefix/swagger-ui')
+        response_json_docs = await client.get('/docs_url_prefix/openapi.json')
+        response_redoc = await client.get('/docs_url_prefix/redoc')
+        response_swagger_ui = await client.get('/docs_url_prefix/swagger-ui')
         if app.config.get('OPENAPI_URL_PREFIX') is None:
             assert response_json_docs.status_code == 404
             assert response_redoc.status_code == 404
@@ -89,7 +90,8 @@ class TestAPISpecServeDocs():
     @pytest.mark.parametrize('prefix', ('', '/'))
     @pytest.mark.parametrize('path', ('', '/'))
     @pytest.mark.parametrize('tested', ('json', 'redoc', 'swagger-ui'))
-    def test_apipec_serve_spec_empty_path(self, app, prefix, path, tested):
+    @pytest.mark.asyncio
+    async def test_apipec_serve_spec_empty_path(self, app, prefix, path, tested):
         """Test empty string or (equivalently) single slash as paths
 
         Documentation can be served at root of application.
@@ -110,10 +112,10 @@ class TestAPISpecServeDocs():
         Api(app)
         client = app.test_client()
         if tested == 'json':
-            response_json_docs = client.get('/')
+            response_json_docs = await client.get('/')
         else:
-            response_json_docs = client.get('openapi.json')
-            response_doc_page = client.get('/')
+            response_json_docs = await client.get('openapi.json')
+            response_doc_page = await client.get('/')
             assert response_doc_page.status_code == 200
             assert (response_doc_page.headers['Content-Type'] ==
                     'text/html; charset=utf-8')
@@ -124,7 +126,8 @@ class TestAPISpecServeDocs():
         'redoc_version',
         (None, 'latest', 'v1.22', 'next', '2.0.0-alpha.17', 'v2.0.0-alpha.17')
     )
-    def test_apipec_serve_redoc_using_cdn(self, app, redoc_version):
+    @pytest.mark.asyncio
+    async def test_apipec_serve_redoc_using_cdn(self, app, redoc_version):
 
         class NewAppConfig(AppConfig):
             OPENAPI_URL_PREFIX = 'api-docs'
@@ -135,7 +138,7 @@ class TestAPISpecServeDocs():
         app.config.from_object(NewAppConfig)
         Api(app)
         client = app.test_client()
-        response_redoc = client.get('/api-docs/redoc')
+        response_redoc = await client.get('/api-docs/redoc')
         assert (response_redoc.headers['Content-Type'] ==
                 'text/html; charset=utf-8')
 
@@ -152,7 +155,8 @@ class TestAPISpecServeDocs():
 
         assert script_elem in response_redoc.get_data(as_text=True)
 
-    def test_apipec_serve_spec_preserve_order(self, app):
+    @pytest.mark.asyncio
+    async def test_apipec_serve_spec_preserve_order(self, app):
         app.config['OPENAPI_URL_PREFIX'] = '/api-docs'
         api = Api(app)
         client = app.test_client()
@@ -162,6 +166,6 @@ class TestAPISpecServeDocs():
             [('/path_{}'.format(i), str(i)) for i in range(20)])
         api.spec._paths = paths
 
-        response_json_docs = client.get('/api-docs/openapi.json')
+        response_json_docs = await client.get('/api-docs/openapi.json')
         assert response_json_docs.status_code == 200
         assert response_json_docs.json['paths'] == paths

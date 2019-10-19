@@ -208,7 +208,8 @@ class TestApi():
         else:
             assert spec['openapi'] == '3.0.2'
 
-    def test_api_register_blueprint_options(self, app):
+    @pytest.mark.asyncio
+    async def test_api_register_blueprint_options(self, app):
         api = Api(app)
         blp = Blueprint('test', 'test', url_prefix='/test1')
 
@@ -223,9 +224,9 @@ class TestApi():
         assert '/test2/' in spec['paths']
 
         client = app.test_client()
-        response = client.get('/test1/')
+        response = await client.get('/test1/')
         assert response.status_code == 404
-        response = client.get('/test2/')
+        response = await client.get('/test2/')
         assert response.status_code == 200
         assert response.json == {'response': 'OK'}
 
