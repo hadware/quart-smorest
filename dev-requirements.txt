@@ -1,6 +1,7 @@
 flake8>=3.2.0
 pytest>=2.8
 pytest-cov>=2.4.0
+pytest-asyncio
 tox>=2.0
 bumpversion>=0.5.3
 -e .

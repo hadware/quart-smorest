@@ -37,7 +37,7 @@ class ErrorHandlerMixin:
         - `headers` (``dict``): additional headers
         """
         headers = {}
-        payload = {'code': error.status[0], 'status': error.status[1]}
+        payload = {'code': error.status_code, 'status': error.name}
 
         # Get additional info passed as kwargs when calling abort
         # data may not exist if
@@ -60,4 +60,4 @@ class ErrorHandlerMixin:
             if 'headers' in data:
                 headers = data['headers']
 
-        return payload, error.code, headers
+        return payload, error.status_code, headers

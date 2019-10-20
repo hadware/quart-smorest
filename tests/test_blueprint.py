@@ -235,7 +235,8 @@ class TestBlueprint():
             assert 'description' not in parameters[0]
 
     @pytest.mark.parametrize('openapi_version', ('2.0', '3.0.2'))
-    def test_blueprint_arguments_multiple(self, app, schemas, openapi_version):
+    @pytest.mark.asyncio
+    async def test_blueprint_arguments_multiple(self, app, schemas, openapi_version):
         app.config['OPENAPI_VERSION'] = openapi_version
         api = Api(app)
         blp = Blueprint('test', __name__, url_prefix='/test')
@@ -268,7 +269,7 @@ class TestBlueprint():
 
         # Check parameters are passed as arguments to view function
         item_data = {'field': 12}
-        response = client.post(
+        response = await client.post(
             '/test/',
             data=json.dumps(item_data),
             content_type='application/json',
@@ -281,7 +282,8 @@ class TestBlueprint():
         }
 
     @pytest.mark.parametrize('openapi_version', ('2.0', '3.0.2'))
-    def test_blueprint_arguments_files_multipart(
+    @pytest.mark.asyncio
+    async def test_blueprint_arguments_files_multipart(
             self, app, schemas, openapi_version):
         app.config['OPENAPI_VERSION'] = openapi_version
         api = Api(app)
@@ -308,7 +310,7 @@ class TestBlueprint():
             'file_2': (io.BytesIO('Test 2'.encode()), 'file_2.txt'),
         }
 
-        response = client.post('/test/', data=files)
+        response = await client.post('/test/', data=files)
         assert response.json == {'file_1': 'Test 1', 'file_2': 'Test 2'}
 
         if openapi_version == '2.0':
