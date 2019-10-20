@@ -228,7 +228,8 @@ class TestApi():
         assert response.status_code == 404
         response = await client.get('/test2/')
         assert response.status_code == 200
-        assert response.json == {'response': 'OK'}
+        json = await response.json
+        assert json == {'response': 'OK'}
 
     @pytest.mark.parametrize('openapi_version', ['2.0', '3.0.2'])
     @pytest.mark.parametrize('base_path', [None, '/', '/v1'])

@@ -272,7 +272,7 @@ class TestBlueprint():
         response = await client.post(
             '/test/',
             data=json.dumps(item_data),
-            content_type='application/json',
+            # content_type='application/json',
             query_string={'arg1': 'test'}
         )
         assert response.status_code == 200
