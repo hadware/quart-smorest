@@ -69,7 +69,7 @@ class EtagMixin:
         def decorator(func):
 
             @wraps(func)
-            def wrapper(*args, **kwargs):
+            async def wrapper(*args, **kwargs):
 
                 etag_enabled = _is_etag_enabled()
 
@@ -80,7 +80,7 @@ class EtagMixin:
                     _get_etag_ctx()['etag_schema'] = etag_schema
 
                 # Execute decorated function
-                resp = func(*args, **kwargs)
+                resp = await func(*args, **kwargs)
 
                 if etag_enabled:
                     # Verify check_etag was called in resource code if needed
@@ -216,7 +216,7 @@ class EtagMixin:
                 etag_data = get_appcontext()[
                     'result_dump' if etag_schema is None else 'result_raw'
                 ]
-                extra_data = tuple((k, v) for k, v in response.headers
+                extra_data = tuple((k, v) for k, v in response.headers.items()
                                    if k in self.ETAG_INCLUDE_HEADERS)
                 new_etag = self._generate_etag(
                     etag_data, etag_schema, extra_data)

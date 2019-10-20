@@ -28,8 +28,8 @@ def get_appcontext():
     # http://flask.pocoo.org/docs/latest/extensiondev/#the-extension-code
     ctx = _app_ctx_stack.top
     if not hasattr(ctx, 'quart_smorest'):
-        ctx.flask_smorest = {}
-    return ctx.flask_smorest
+        ctx.quart_smorest = {}
+    return ctx.quart_smorest
 
 
 def load_info_from_docstring(docstring, *, delimiter="---"):

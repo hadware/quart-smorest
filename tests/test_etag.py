@@ -260,13 +260,14 @@ class TestEtag():
     @pytest.mark.parametrize('method', HTTP_METHODS)
     @pytest.mark.parametrize('debug', (True, False))
     @pytest.mark.parametrize('testing', (True, False))
-    def test_etag_verify_check_etag_exception(
+    @pytest.mark.asyncio
+    async def test_etag_verify_check_etag_exception(
             self, app, method, debug, testing):
         app.config['DEBUG'] = debug
         app.config['TESTING'] = testing
         blp = Blueprint('test', __name__)
 
-        with app.test_request_context('/', method=method):
+        async with app.test_request_context('/', method=method):
             if (debug or testing) and method in ['PUT', 'PATCH', 'DELETE']:
                 with pytest.raises(
                         CheckEtagNotCalledError,
@@ -277,7 +278,8 @@ class TestEtag():
                 blp._verify_check_etag()
 
     @pytest.mark.parametrize('etag_disabled', (True, False))
-    def test_etag_set_etag(self, app, schemas, etag_disabled):
+    @pytest.mark.asyncio
+    async def test_etag_set_etag(self, app, schemas, etag_disabled):
         app.config['ETAG_DISABLED'] = etag_disabled
         blp = Blueprint('test', __name__)
         etag_schema = schemas.DocEtagSchema
@@ -285,14 +287,14 @@ class TestEtag():
         etag = blp._generate_etag(item)
         etag_with_schema = blp._generate_etag(item, etag_schema)
 
-        with app.test_request_context('/'):
+        async with app.test_request_context('/'):
             blp.set_etag(item)
             if not etag_disabled:
                 assert _get_etag_ctx()['etag'] == etag
                 del _get_etag_ctx()['etag']
             else:
                 assert 'etag' not in _get_etag_ctx()
-        with app.test_request_context(
+        async with app.test_request_context(
                 '/', headers={'If-None-Match': etag}):
             if not etag_disabled:
                 with pytest.raises(NotModified):
@@ -300,7 +302,7 @@ class TestEtag():
             else:
                 blp.set_etag(item)
                 assert 'etag' not in _get_etag_ctx()
-        with app.test_request_context(
+        async with app.test_request_context(
                 '/', headers={'If-None-Match': etag_with_schema}):
             if not etag_disabled:
                 with pytest.raises(NotModified):
@@ -308,7 +310,7 @@ class TestEtag():
             else:
                 blp.set_etag(item, etag_schema)
                 assert 'etag' not in _get_etag_ctx()
-        with app.test_request_context(
+        async with app.test_request_context(
                 '/', headers={'If-None-Match': 'dummy'}):
             if not etag_disabled:
                 blp.set_etag(item)
@@ -325,13 +327,14 @@ class TestEtag():
 
     @pytest.mark.parametrize('etag_disabled', (True, False))
     @pytest.mark.parametrize('method', HTTP_METHODS)
-    def test_set_etag_method_not_allowed_warning(
+    @pytest.mark.asyncio
+    async def test_set_etag_method_not_allowed_warning(
             self, app, method, etag_disabled):
         app.config['ETAG_DISABLED'] = etag_disabled
         blp = Blueprint('test', __name__)
 
         with mock.patch.object(app.logger, 'warning') as mock_warning:
-            with app.test_request_context('/', method=method):
+            async with app.test_request_context('/', method=method):
                 blp.set_etag(None)
             if method in ['GET', 'HEAD', 'POST', 'PUT', 'PATCH']:
                 assert not mock_warning.called
@@ -339,7 +342,8 @@ class TestEtag():
                 assert mock_warning.called
 
     @pytest.mark.parametrize('paginate', (True, False))
-    def test_etag_set_etag_in_response(self, app, schemas, paginate):
+    @pytest.mark.asyncio
+    async def test_etag_set_etag_in_response(self, app, schemas, paginate):
         blp = Blueprint('test', __name__)
         etag_schema = schemas.DocEtagSchema
         item = {'item_id': 1, 'db_field': 0}
@@ -351,7 +355,7 @@ class TestEtag():
         etag_with_schema = blp._generate_etag(
             item, etag_schema, extra_data=extra_data)
 
-        with app.test_request_context('/'):
+        async with app.test_request_context('/'):
             resp = Response()
             if extra_data:
                 resp.headers['X-Pagination'] = 'Dummy pagination header'
@@ -359,7 +363,7 @@ class TestEtag():
             blp._set_etag_in_response(resp, None)
             assert resp.get_etag() == (etag, False)
 
-        with app.test_request_context('/'):
+        async with app.test_request_context('/'):
             resp = Response()
             if extra_data:
                 resp.headers['X-Pagination'] = 'Dummy pagination header'
@@ -367,7 +371,8 @@ class TestEtag():
             blp._set_etag_in_response(resp, etag_schema)
             assert resp.get_etag() == (etag_with_schema, False)
 
-    def test_etag_duplicate_header(self, app):
+    @pytest.mark.asyncio
+    async def test_etag_duplicate_header(self, app):
         """Check duplicate header results in a different ETag"""
 
         class CustomBlueprint(Blueprint):
@@ -375,15 +380,15 @@ class TestEtag():
 
         blp = CustomBlueprint('test', __name__, url_prefix='/test')
 
-        with app.test_request_context('/'):
-            resp = Response()
+        async with app.test_request_context('/'):
+            resp = Response("Test")
             resp.headers.add('X-test', 'Test')
             get_appcontext()['result_dump'] = {}
             blp._set_etag_in_response(resp, None)
             etag_1 = resp.get_etag()
 
-        with app.test_request_context('/'):
-            resp = Response()
+        async with app.test_request_context('/'):
+            resp = Response("Test")
             resp.headers.add('X-test', 'Test')
             resp.headers.add('X-test', 'Test')
             get_appcontext()['result_dump'] = {}
@@ -401,7 +406,7 @@ class TestEtag():
         @blp.route('/')
         @blp.etag
         @blp.response()
-        def func_response_etag():
+        async def func_response_etag():
             # When the view function returns a Response object,
             # the ETag must be specified manually
             blp.set_etag('test')
@@ -410,7 +415,7 @@ class TestEtag():
         api.register_blueprint(blp)
 
         response = await client.get('/test/')
-        assert response.json == {}
+        assert await response.json == {}
         assert response.get_etag() == (blp._generate_etag('test'), False)
 
     @pytest.mark.asyncio

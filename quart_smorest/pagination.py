@@ -161,7 +161,7 @@ class PaginationMixin:
             func._apidoc.setdefault('parameters', []).append(parameters)
 
             @wraps(func)
-            def wrapper(*args, **kwargs):
+            async def wrapper(*args, **kwargs):
 
                 page_params = parser.parse(page_params_schema, request)
 
@@ -170,8 +170,8 @@ class PaginationMixin:
                     kwargs['pagination_parameters'] = page_params
 
                 # Execute decorated function
-                result, status, headers = unpack_tuple_response(
-                    func(*args, **kwargs))
+                func_response = await func(*args, **kwargs)
+                result, status, headers = unpack_tuple_response(func_response)
 
                 # Post pagination: use pager class to paginate the result
                 if pager is not None:
