@@ -68,8 +68,9 @@ class TestAPISpecServeDocs():
             assert response_redoc.status_code == 404
             assert response_swagger_ui.status_code == 404
         else:
-            assert response_json_docs.json['info'] == {
-                'version': '1', 'title': 'API Test'}
+            response_json = await response_json_docs.json
+            assert response_json['info'] == {'version': '1',
+                                             'title': 'API Test'}
             if app.config.get('OPENAPI_REDOC_PATH') is None:
                 assert response_redoc.status_code == 404
             else:
@@ -119,8 +120,9 @@ class TestAPISpecServeDocs():
             assert response_doc_page.status_code == 200
             assert (response_doc_page.headers['Content-Type'] ==
                     'text/html; charset=utf-8')
-        assert response_json_docs.json['info'] == {
-            'version': '1', 'title': 'API Test'}
+        response_json = await response_json_docs.json
+        assert response_json['info'] == {'version': '1',
+                                         'title': 'API Test'}
 
     @pytest.mark.parametrize(
         'redoc_version',
@@ -153,7 +155,8 @@ class TestAPISpecServeDocs():
                 '{}/bundles/redoc.standalone.js'.format(redoc_version))
         script_elem = '<script src="{}"></script>'.format(redoc_url)
 
-        assert script_elem in response_redoc.get_data(as_text=True)
+        response_data: bytes = await response_redoc.get_data(raw=True)
+        assert script_elem in response_data.decode()
 
     @pytest.mark.asyncio
     async def test_apipec_serve_spec_preserve_order(self, app):
@@ -168,4 +171,4 @@ class TestAPISpecServeDocs():
 
         response_json_docs = await client.get('/api-docs/openapi.json')
         assert response_json_docs.status_code == 200
-        assert response_json_docs.json['paths'] == paths
+        assert (await response_json_docs.json)['paths'] == paths

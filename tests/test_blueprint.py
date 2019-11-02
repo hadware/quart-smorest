@@ -631,7 +631,7 @@ class TestBlueprint():
 
         response = await client.put('/test/')
         assert response.status_code == 200
-        assert response.json == {'Value': 'OK'}
+        assert await response.json == {'Value': 'OK'}
 
     def test_blueprint_doc_method_view(self, app):
         api = Api(app)

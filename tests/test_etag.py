@@ -202,10 +202,11 @@ class TestEtag():
             ).hexdigest()
 
     @pytest.mark.parametrize('method', HTTP_METHODS)
-    def test_etag_check_precondition(self, app, method):
+    @pytest.mark.asyncio
+    async def test_etag_check_precondition(self, app, method):
         blp = Blueprint('test', __name__)
 
-        with app.test_request_context('/', method=method):
+        async with app.test_request_context('/', method=method):
             if method in ['PUT', 'PATCH', 'DELETE']:
                 with pytest.raises(PreconditionRequired):
                     blp._check_precondition()
@@ -213,7 +214,8 @@ class TestEtag():
                 blp._check_precondition()
 
     @pytest.mark.parametrize('etag_disabled', (True, False))
-    def test_etag_check_etag(self, app, schemas, etag_disabled):
+    @pytest.mark.asyncio
+    async def test_etag_check_etag(self, app, schemas, etag_disabled):
         app.config['ETAG_DISABLED'] = etag_disabled
         blp = Blueprint('test', __name__)
         etag_schema = schemas.DocEtagSchema
@@ -222,14 +224,14 @@ class TestEtag():
         old_etag = blp._generate_etag(old_item)
         old_etag_with_schema = blp._generate_etag(old_item, etag_schema)
 
-        with app.test_request_context('/', headers={'If-Match': old_etag}):
+        async with app.test_request_context('/', headers={'If-Match': old_etag}):
             blp.check_etag(old_item)
             if not etag_disabled:
                 with pytest.raises(PreconditionFailed):
                     blp.check_etag(new_item)
             else:
                 blp.check_etag(new_item)
-        with app.test_request_context(
+        async with app.test_request_context(
                 '/', headers={'If-Match': old_etag_with_schema}):
             blp.check_etag(old_item, etag_schema)
             if not etag_disabled:
@@ -239,13 +241,14 @@ class TestEtag():
                 blp.check_etag(new_item)
 
     @pytest.mark.parametrize('method', HTTP_METHODS)
-    def test_etag_verify_check_etag_warning(self, app, method):
+    @pytest.mark.asyncio
+    async def test_etag_verify_check_etag_warning(self, app, method):
         blp = Blueprint('test', __name__)
         old_item = {'item_id': 1, 'db_field': 0}
         old_etag = blp._generate_etag(old_item)
 
         with mock.patch.object(app.logger, 'warning') as mock_warning:
-            with app.test_request_context('/', method=method,
+            async with app.test_request_context('/', method=method,
                                           headers={'If-Match': old_etag}):
                 blp._verify_check_etag()
                 if method in ['PUT', 'PATCH', 'DELETE']:
