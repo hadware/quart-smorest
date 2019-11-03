@@ -128,7 +128,7 @@ class DocBlueprintMixin:
                     endpoint='openapi_swagger_ui',
                     view_func=self._openapi_swagger_ui)
 
-    def _openapi_json(self):
+    async def _openapi_json(self):
         """Serve JSON spec file"""
         # We don't use Quart.jsonify here as it would sort the keys
         # alphabetically while we want to preserve the order.
