@@ -34,7 +34,7 @@ def pagination_blueprint(collection, schemas, as_method_view, custom_params):
             @blp.response(DocSchema(many=True))
             @blp.paginate(
                 page=page, page_size=page_size, max_page_size=max_page_size)
-            def get(self, pagination_parameters):
+            async def get(self, pagination_parameters):
                 pagination_parameters.item_count = len(collection.items)
                 return collection.items[
                     pagination_parameters.first_item:
@@ -45,7 +45,7 @@ def pagination_blueprint(collection, schemas, as_method_view, custom_params):
         @blp.response(DocSchema(many=True))
         @blp.paginate(
             page=page, page_size=page_size, max_page_size=max_page_size)
-        def get_resources(pagination_parameters):
+        async def get_resources(pagination_parameters):
             pagination_parameters.item_count = len(collection.items)
             return collection.items[
                 pagination_parameters.first_item:
@@ -74,14 +74,14 @@ def post_pagination_blueprint(
             @blp.response(DocSchema(many=True))
             @blp.paginate(Page, page=page,
                           page_size=page_size, max_page_size=max_page_size)
-            def get(self):
+            async def get(self):
                 return collection.items
     else:
         @blp.route('/')
         @blp.response(DocSchema(many=True))
         @blp.paginate(Page, page=page,
                       page_size=page_size, max_page_size=max_page_size)
-        def get_resources():
+        async def get_resources():
             return collection.items
 
     return blp
@@ -136,7 +136,7 @@ class TestPagination():
         @blp.route('/')
         @blp.response()
         @blp.paginate()
-        def func(pagination_parameters):
+        async def func(pagination_parameters):
             pagination_parameters.item_count = 2
             return [1, 2]
 
@@ -165,7 +165,7 @@ class TestPagination():
         @blp.route('/')
         @blp.response()
         @blp.paginate()
-        def func(pagination_parameters):
+        async def func(pagination_parameters):
             # Here, we purposely forget to call set_item_count
             # pagination_parameters.item_count = 2
             return [1, 2]
@@ -191,7 +191,7 @@ class TestPagination():
         response = await app_fixture.client.get(
             '/test/', query_string={'page': 2, 'page_size': 5})
         assert response.status_code == 200
-        data = response.json
+        data = await response.json
         headers = response.headers
         assert len(data) == 5
         assert data[0] == {'field': 5, 'item_id': 6}
@@ -206,7 +206,7 @@ class TestPagination():
         response = await app_fixture.client.get(
             '/test/', query_string={'page': 334, 'page_size': 3})
         assert response.status_code == 200
-        data = response.json
+        data = await response.json
         headers = response.headers
         assert len(data) == 1
         assert json.loads(headers['X-Pagination']) == {
@@ -222,7 +222,7 @@ class TestPagination():
         # Custom: page = 2, page_size = 5
         response = await app_fixture.client.get('/test/')
         assert response.status_code == 200
-        data = response.json
+        data = await response.json
         headers = response.headers
         if app_fixture.custom_params is False:
             assert len(data) == 10
@@ -251,43 +251,46 @@ class TestPagination():
         assert json.loads(response.headers['X-Pagination']) == {
             'total': 0, 'total_pages': 0,
         }
-        assert response.json == []
+        assert (await response.json) == []
 
     @pytest.mark.parametrize('collection', [1000, ], indirect=True)
-    def test_pagination_page_out_of_range(self, app_fixture):
+    @pytest.mark.asyncio
+    async def test_pagination_page_out_of_range(self, app_fixture):
         # page = 120, page_size = 10
         # page out of range -> 200 with empty list, partial pagination metadata
-        response = app_fixture.client.get(
+        response = await app_fixture.client.get(
             '/test/', query_string={'page': 120, 'page_size': 10})
         assert response.status_code == 200
         assert json.loads(response.headers['X-Pagination']) == {
             'total': 1000, 'total_pages': 100,
             'first_page': 1, 'last_page': 100,
         }
-        assert response.json == []
+        assert (await response.json) == []
 
     @pytest.mark.parametrize('collection', [1000, ], indirect=True)
-    def test_pagination_min_page_page_size(self, app_fixture):
+    @pytest.mark.asyncio
+    async def test_pagination_min_page_page_size(self, app_fixture):
         client = app_fixture.client
         # page < 1 => 422
-        response = client.get('/test/', query_string={'page': 0})
+        response = await client.get('/test/', query_string={'page': 0})
         assert response.status_code == 422
-        response = client.get('/test/', query_string={'page': -42})
+        response = await client.get('/test/', query_string={'page': -42})
         assert response.status_code == 422
         # page_size < 1 => 422
-        response = client.get('/test/', query_string={'page_size': 0})
+        response = await client.get('/test/', query_string={'page_size': 0})
         assert response.status_code == 422
-        response = client.get('/test/', query_string={'page_size': -42})
+        response = await client.get('/test/', query_string={'page_size': -42})
         assert response.status_code == 422
 
     @pytest.mark.parametrize('collection', [1000, ], indirect=True)
-    def test_pagination_max_page_size(self, app_fixture):
+    @pytest.mark.asyncio
+    async def test_pagination_max_page_size(self, app_fixture):
         client = app_fixture.client
         # default: page_size > 100 => 422
         # custom: page_size > 10 => 422
-        response = client.get('/test/', query_string={'page_size': 101})
+        response = await client.get('/test/', query_string={'page_size': 101})
         assert response.status_code == 422
-        response = client.get('/test/', query_string={'page_size': 11})
+        response = await client.get('/test/', query_string={'page_size': 11})
         if app_fixture.custom_params is False:
             assert response.status_code == 200
         else:

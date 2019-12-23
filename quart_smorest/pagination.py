@@ -163,7 +163,7 @@ class PaginationMixin:
             @wraps(func)
             async def wrapper(*args, **kwargs):
 
-                page_params = parser.parse(page_params_schema, request)
+                page_params = await parser.parse(page_params_schema, request)
 
                 # Pagination in resource code: inject page_params as kwargs
                 if pager is None:
