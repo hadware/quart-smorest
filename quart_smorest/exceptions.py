@@ -24,7 +24,7 @@ class NotModified(qexc.HTTPStatusException, QuartSmorestError):
     status = HTTPStatus.NOT_MODIFIED
 
 
-class PreconditionRequired(qexc.HTTPException, QuartSmorestError):
+class PreconditionRequired(qexc.HTTPStatusException, QuartSmorestError):
     """Etag required but missing"""
     # Overriding description as we don't provide If-Unmodified-Since
     status = HTTPStatus.PRECONDITION_REQUIRED

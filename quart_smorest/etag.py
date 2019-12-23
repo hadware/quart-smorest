@@ -131,11 +131,15 @@ class EtagMixin:
         """
         # TODO: other methods?
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Match
+        # TODO : notify quart dev that truthiness of etag isn't right
+        req_if_match = request.if_match
         if (
                 request.method in self.METHODS_NEEDING_CHECK_ETAG and
-                not request.if_match
+                not bool(req_if_match.weak or
+                         req_if_match.strong or
+                         req_if_match.star)
         ):
-            raise PreconditionRequired
+            raise PreconditionRequired()
 
     def check_etag(self, etag_data, etag_schema=None):
         """Compare If-Match header with computed ETag

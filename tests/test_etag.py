@@ -40,13 +40,13 @@ def app_with_etag(request, collection, schemas, app):
             @blp.etag(DocEtagSchema(many=True))
             @blp.response(
                 DocSchema(many=True))
-            def get(self):
+            async def get(self):
                 return collection.items
 
             @blp.etag(DocEtagSchema)
             @blp.arguments(DocSchema)
             @blp.response(DocSchema, code=201)
-            def post(self, new_item):
+            async def post(self, new_item):
                 return collection.post(new_item)
 
         @blp.route('/<int:item_id>')
@@ -60,20 +60,20 @@ def app_with_etag(request, collection, schemas, app):
 
             @blp.etag(DocEtagSchema)
             @blp.response(DocSchema)
-            def get(self, item_id):
+            async def get(self, item_id):
                 return self._get_item(item_id)
 
             @blp.etag(DocEtagSchema)
             @blp.arguments(DocSchema)
             @blp.response(DocSchema)
-            def put(self, new_item, item_id):
+            async def put(self, new_item, item_id):
                 item = self._get_item(item_id)
                 blp.check_etag(item, DocEtagSchema)
                 return collection.put(item_id, new_item)
 
             @blp.etag(DocEtagSchema)
             @blp.response(code=204)
-            def delete(self, item_id):
+            async def delete(self, item_id):
                 item = self._get_item(item_id)
                 blp.check_etag(item, DocEtagSchema)
                 del collection.items[collection.items.index(item)]
@@ -82,14 +82,14 @@ def app_with_etag(request, collection, schemas, app):
         @blp.route('/')
         @blp.etag(DocEtagSchema(many=True))
         @blp.response(DocSchema(many=True))
-        def get_resources():
+        async def get_resources():
             return collection.items
 
         @blp.route('/', methods=('POST',))
         @blp.etag(DocEtagSchema)
         @blp.arguments(DocSchema)
         @blp.response(DocSchema, code=201)
-        def post_resource(new_item):
+        async def post_resource(new_item):
             return collection.post(new_item)
 
         def _get_item(item_id):
@@ -101,14 +101,14 @@ def app_with_etag(request, collection, schemas, app):
         @blp.route('/<int:item_id>')
         @blp.etag(DocEtagSchema)
         @blp.response(DocSchema)
-        def get_resource(item_id):
+        async def get_resource(item_id):
             return _get_item(item_id)
 
         @blp.route('/<int:item_id>', methods=('PUT',))
         @blp.etag(DocEtagSchema)
         @blp.arguments(DocSchema)
         @blp.response(DocSchema)
-        def put_resource(new_item, item_id):
+        async def put_resource(new_item, item_id):
             item = _get_item(item_id)
             blp.check_etag(item)
             return collection.put(item_id, new_item)
@@ -116,7 +116,7 @@ def app_with_etag(request, collection, schemas, app):
         @blp.route('/<int:item_id>', methods=('DELETE',))
         @blp.etag(DocEtagSchema)
         @blp.response(code=204)
-        def delete_resource(item_id):
+        async def delete_resource(item_id):
             item = _get_item(item_id)
             blp.check_etag(item)
             del collection.items[collection.items.index(item)]
@@ -359,7 +359,7 @@ class TestEtag():
             item, etag_schema, extra_data=extra_data)
 
         async with app.test_request_context('/'):
-            resp = Response()
+            resp = Response([])
             if extra_data:
                 resp.headers['X-Pagination'] = 'Dummy pagination header'
             get_appcontext()['result_dump'] = item
@@ -367,7 +367,7 @@ class TestEtag():
             assert resp.get_etag() == (etag, False)
 
         async with app.test_request_context('/'):
-            resp = Response()
+            resp = Response([])
             if extra_data:
                 resp.headers['X-Pagination'] = 'Dummy pagination header'
             get_appcontext()['result_raw'] = item
@@ -443,10 +443,10 @@ class TestEtag():
         response = await client.post(
             '/test/',
             data=json.dumps(item_1_data),
-            content_type='application/json'
+            headers={"Content-Type": "application/json"}
         )
         assert response.status_code == 201
-        item_1_id = response.json['item_id']
+        item_1_id = (await response.json)['item_id']
 
         # GET with wrong/outdated ETag: OK
         response = await client.get(
@@ -472,7 +472,7 @@ class TestEtag():
         response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
-            content_type='application/json'
+            headers={"Content-Type": "application/json"}
         )
         assert response.status_code == 428
 
@@ -480,8 +480,8 @@ class TestEtag():
         response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
-            content_type='application/json',
-            headers={'If-Match': item_etag}
+            headers={'If-Match': item_etag,
+                     "Content-Type": "application/json"}
         )
         assert response.status_code == 200
         new_item_etag = response.headers['ETag']
@@ -491,8 +491,8 @@ class TestEtag():
         response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
-            content_type='application/json',
-            headers={'If-Match': item_etag}
+            headers={'If-Match': item_etag,
+                     "Content-Type": "application/json"}
         )
         assert response.status_code == 412
 
@@ -543,10 +543,10 @@ class TestEtag():
         response = await client.post(
             '/test/',
             data=json.dumps(item_1_data),
-            content_type='application/json'
+            headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 201
-        item_1_id = response.json['item_id']
+        item_1_id = (await response.json)['item_id']
 
         # GET by ID: OK
         response = await client.get('/test/{}'.format(item_1_id))
@@ -564,7 +564,7 @@ class TestEtag():
         response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
-            content_type='application/json'
+            headers={"Content-Type": "application/json"}
         )
         assert response.status_code == 200
 
@@ -573,7 +573,7 @@ class TestEtag():
         response = await client.put(
             '/test/{}'.format(item_1_id),
             data=json.dumps(item_1_data),
-            content_type='application/json'
+            headers={"Content-Type": "application/json"}
         )
         assert response.status_code == 200
 
@@ -582,10 +582,10 @@ class TestEtag():
         response = await client.post(
             '/test/',
             data=json.dumps(item_2_data),
-            content_type='application/json'
+            headers={"Content-Type": "application/json"}
         )
         assert response.status_code == 201
-        item_2_id = response.json['item_id']
+        item_2_id = (await response.json)['item_id']
 
         # DELETE without ETag: No Content (dummy ETag ignored)
         response = await client.delete('/test/{}'.format(item_1_id))
